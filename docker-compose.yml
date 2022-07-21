@@ -1,0 +1,73 @@
+version: '3.4'
+
+services:
+  eventbus:
+    container_name: OrderWalletEventBusRabbitMQ
+    image: rabbitmq:3-management
+    restart: always
+    #environment:
+    #- RABBITMQ_DEFAULT_USER=myuser
+    #- RABBITMQ_DEFAULT_PASS=mypassword
+    ports:
+    # AMQP protocol port
+    - '5672:5672'
+    # HTTP management UI
+    - '15672:15672'
+
+  basketservice.api:
+    image: ${DOCKER_REGISTRY-}basketserviceapi
+    build:
+      context: .
+      dockerfile: BasketService/BasketService.API/Dockerfile
+    depends_on:
+        - basketservice-redis-server
+
+  basketservice-redis-server:
+    container_name: BasketServiceRedisServer
+    image: redis
+    restart: always
+    ports:
+        - "6379:6379"
+    volumes:
+        - basketservicecache:/data
+
+  orderservice.api:
+    image: ${DOCKER_REGISTRY-}orderserviceapi
+    build:
+      context: .
+      dockerfile: OrderService/OrderService.API/Dockerfile
+    depends_on:
+        - orderservice-postgres-server
+        - orderservice-redis-server
+   
+  orderservice-postgres-server:
+    container_name: OrderServicePostgresServer
+    image: postgres
+    ports:
+        - "5432:5432"
+    environment:
+         POSTGRES_PASSWORD: postgres
+    volumes:
+        - orderservicedatabase:/var/lib/postgresql/data
+
+  orderservice-redis-server:
+    container_name: OrderServiceRedisServer
+    image: redis
+    restart: always
+    ports:
+        - "6380:6379"
+    volumes:
+        - orderservicecache:/data
+
+  walletservice.api:
+    image: ${DOCKER_REGISTRY-}walletserviceapi
+    build:
+      context: .
+      dockerfile: WalletService/WalletService.API/Dockerfile
+
+volumes:
+  orderservicedatabase:
+  orderservicecache:
+    driver: local
+  basketservicecache:
+    driver: local

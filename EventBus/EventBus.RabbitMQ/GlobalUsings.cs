@@ -1,0 +1,12 @@
+﻿global using EventBus.RabbitMQ;
+global using EventBus.RabbitMQ.Interfaces;
+global using EventBus.RabbitMQ.Events;
+global using RabbitMQ.Client;
+global using RabbitMQ.Client.Exceptions;
+global using RabbitMQ.Client.Events;
+global using Polly;
+global using Polly.Retry;
+global using Autofac;
+global using System.Text.Json.Serialization;
+global using System.Text;
+global using System.Text.Json;

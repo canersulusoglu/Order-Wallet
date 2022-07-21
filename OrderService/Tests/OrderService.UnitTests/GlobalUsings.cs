@@ -1,0 +1,9 @@
+global using Xunit;
+global using Moq;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.AspNetCore.Mvc;
+global using System.Net;
+global using OrderService.API;
+global using OrderService.API.Services.Orders;
+global using OrderService.API.ViewModels;
+global using OrderService.API.Controllers.Orders;
