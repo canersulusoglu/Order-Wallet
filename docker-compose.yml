@@ -3,7 +3,7 @@ version: '3.4'
 services:
   eventbus:
     container_name: OrderWalletEventBusRabbitMQ
-    image: rabbitmq:3-management
+    image: rabbitmq:3-management-alpine
     restart: always
     #environment:
     #- RABBITMQ_DEFAULT_USER=myuser
@@ -19,12 +19,14 @@ services:
     build:
       context: .
       dockerfile: BasketService/BasketService.API/Dockerfile
+    ports:
+        - "4000:80"
     depends_on:
         - basketservice-redis-server
 
   basketservice-redis-server:
     container_name: BasketServiceRedisServer
-    image: redis
+    image: redis:7-bullseye
     restart: always
     ports:
         - "6379:6379"
@@ -36,13 +38,15 @@ services:
     build:
       context: .
       dockerfile: OrderService/OrderService.API/Dockerfile
+    ports:
+        - "4001:80"
     depends_on:
         - orderservice-postgres-server
         - orderservice-redis-server
    
   orderservice-postgres-server:
     container_name: OrderServicePostgresServer
-    image: postgres
+    image: postgres:14-bullseye
     ports:
         - "5432:5432"
     environment:
@@ -52,7 +56,7 @@ services:
 
   orderservice-redis-server:
     container_name: OrderServiceRedisServer
-    image: redis
+    image: redis:7-bullseye
     restart: always
     ports:
         - "6380:6379"
@@ -64,6 +68,8 @@ services:
     build:
       context: .
       dockerfile: WalletService/WalletService.API/Dockerfile
+    ports:
+        - "4002:80"
 
 volumes:
   orderservicedatabase:

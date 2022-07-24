@@ -7,10 +7,10 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["WalletService.API/WalletService.API.csproj", "WalletService.API/"]
-RUN dotnet restore "WalletService.API/WalletService.API.csproj"
+COPY ["WalletService/WalletService.API/WalletService.API.csproj", "WalletService/WalletService.API/"]
+RUN dotnet restore "WalletService/WalletService.API/WalletService.API.csproj"
 COPY . .
-WORKDIR "/src/WalletService.API"
+WORKDIR "/src/WalletService/WalletService.API"
 RUN dotnet build "WalletService.API.csproj" -c Release -o /app/build
 
 FROM build AS publish

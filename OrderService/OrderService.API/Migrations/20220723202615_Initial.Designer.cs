@@ -12,7 +12,7 @@ using OrderService.API;
 namespace OrderService.API.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20220719115616_Initial")]
+    [Migration("20220723202615_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,15 +35,7 @@ namespace OrderService.API.Migrations
                     b.Property<DateTime>("CreatedTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("EmployeeEmail")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("EmployeeName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("EmployeeSurname")
+                    b.Property<string>("EmployeeId")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -54,7 +46,7 @@ namespace OrderService.API.Migrations
                     b.Property<DateTime>("UpdatedTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("UserEmail")
+                    b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -81,6 +73,10 @@ namespace OrderService.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
+
+                    b.Property<string>("ProductId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("ProductName")
                         .IsRequired()

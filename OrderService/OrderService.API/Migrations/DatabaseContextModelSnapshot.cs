@@ -33,15 +33,7 @@ namespace OrderService.API.Migrations
                     b.Property<DateTime>("CreatedTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("EmployeeEmail")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("EmployeeName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("EmployeeSurname")
+                    b.Property<string>("EmployeeId")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -52,7 +44,7 @@ namespace OrderService.API.Migrations
                     b.Property<DateTime>("UpdatedTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("UserEmail")
+                    b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -79,6 +71,10 @@ namespace OrderService.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
+
+                    b.Property<string>("ProductId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("ProductName")
                         .IsRequired()

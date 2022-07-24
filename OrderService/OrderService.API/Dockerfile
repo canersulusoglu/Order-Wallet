@@ -7,10 +7,11 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["OrderService.API/OrderService.API.csproj", "OrderService.API/"]
-RUN dotnet restore "OrderService.API/OrderService.API.csproj"
+COPY ["OrderService/OrderService.API/OrderService.API.csproj", "OrderService/OrderService.API/"]
+COPY ["EventBus/EventBus.RabbitMQ/EventBus.RabbitMQ.csproj", "EventBus/EventBus.RabbitMQ/"]
+RUN dotnet restore "OrderService/OrderService.API/OrderService.API.csproj"
 COPY . .
-WORKDIR "/src/OrderService.API"
+WORKDIR "/src/OrderService/OrderService.API"
 RUN dotnet build "OrderService.API.csproj" -c Release -o /app/build
 
 FROM build AS publish

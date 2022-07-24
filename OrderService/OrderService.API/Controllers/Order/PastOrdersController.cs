@@ -1,6 +1,6 @@
 ﻿namespace OrderService.API.Controllers.Orders
 {
-    [Route("api/[controller]")]
+    [Route("api/Order/[controller]")]
     [ApiController]
     public class PastOrdersController : ControllerBase
     {
@@ -13,14 +13,18 @@
 
         [Route("getPastOrdersOfUser")]
         [HttpPost]
-        [ProducesResponseType(typeof(List<Order>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(Response<List<Order>>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> GetPastOrdersOfUserAsync()
+        public IActionResult GetPastOrdersOfUserAsync(int itemsPerPage, int pageNumber)
         {
             try
             {
-                var userEmail = "test@gmail.com";
-                List<Order> userPastOrders = _pastOrdersService.GetUserPastOrders(userEmail);
+                /*
+                /* Identity Here
+                var userId, userRoom = _identityService.GetUserIdentity();
+                */
+                var userId = "300";
+                List<Order> userPastOrders = _pastOrdersService.GetUserPastOrders(userId, itemsPerPage, pageNumber);
 
                 return Ok(new Response<List<Order>>
                 {
@@ -36,9 +40,9 @@
 
         [Route("getPastOrdersToEmployee")]
         [HttpPost]
-        [ProducesResponseType(typeof(List<Order>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(Response<List<Order>>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> GetPastOrdersToEmployeeAsync(int itemsPerPage, int pageNumber)
+        public IActionResult GetPastOrdersToEmployeeAsync(int itemsPerPage, int pageNumber)
         {
             try
             {

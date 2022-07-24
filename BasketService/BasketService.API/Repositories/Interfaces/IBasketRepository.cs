@@ -1,9 +1,8 @@
 ﻿namespace BasketService.API.Repositories.Interfaces
 {
-    public interface IBasketRepository<T>
+    public interface IBasketRepository
     {
-        public T? GetStringKey(string key);
-        public T UpdateStringKey(string key, T entity);
-        public T? DeleteStringKey(string key);
+        public IDatabase RepositoryContext { get; init; }
+        public ISubscriber Subscriber { get; init; }
     }
 }

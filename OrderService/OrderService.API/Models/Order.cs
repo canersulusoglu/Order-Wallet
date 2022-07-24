@@ -2,16 +2,9 @@
 {
     public class Order : BaseModel
     {
+        public string UserId { get; set; }
         public string RoomName { get; set; }
-
-        public string UserEmail { get; set; }
-
-        public string EmployeeEmail { get; set; }
-
-        public string EmployeeName { get; set; }
-
-        public string EmployeeSurname { get; set; }
-
+        public string EmployeeId { get; set; }
         public ICollection<OrderItem> OrderItems { get; set; }
     }
 }

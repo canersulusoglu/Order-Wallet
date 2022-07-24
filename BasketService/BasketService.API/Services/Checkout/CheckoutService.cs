@@ -2,53 +2,58 @@
 {
     public class CheckoutService : ICheckoutService
     {
-        private readonly IBasketRepository<RoomBasketViewModel> _roomBasketRepository;
+        private readonly IBasketRepository _basketRepository;
         private readonly IEventBus _eventBus;
 
-        public CheckoutService(IBasketRepository<RoomBasketViewModel> roomBasketRepository, IEventBus eventBus)
+        public CheckoutService(IBasketRepository basketRepository, IEventBus eventBus)
         {
-            _roomBasketRepository = roomBasketRepository;
+            _basketRepository = basketRepository;
             _eventBus = eventBus;
         }
-        public Task confirmBasket(string roomName)
+        public async Task confirmBasket(string userId, string roomName)
         {
-            /*
-            RoomOrderViewModel? roomBasket = _roomBasketRepository.GetStringKey(roomName);
-            if (roomBasket == null)
+            RedisValue roomBasket = await _basketRepository.RepositoryContext.StringGetAsync(roomName);
+            if (roomBasket.IsNullOrEmpty)
             {
                 throw new BasketNotFoundException();
             }
-            */
 
-            RoomBasketViewModel test = new RoomBasketViewModel
+            RoomBasketViewModel roomBasketVM = JsonConvert.DeserializeObject<RoomBasketViewModel>(roomBasket);
+            roomBasketVM.ConfirmedBasketUserId = userId;
+            roomBasketVM.RoomName = roomName;
+            string roomOrder = JsonConvert.SerializeObject(roomBasketVM);
+            /*
+            RoomBasketViewModel roomBasket = new RoomBasketViewModel
             {
+                ConfirmedBasketUserId = userId,
                 RoomName = "101",
                 UserBaskets = new List<UserBasketViewModel>
                 {
                     new UserBasketViewModel
                     {
-                        UserEmail="cscaner26@gmail.com",
+                        UserId="205",
                         UserBasketItems=new List<UserBasketItemViewModel>
                         {
-                            new UserBasketItemViewModel{ProductName="Tea", ProductPrice=1.5m, ProductQuantity=3}
+                            new UserBasketItemViewModel{ProductName="Tea", ProductId="1", ProductPrice=1.5m, ProductQuantity=3},
+                            new UserBasketItemViewModel{ProductName="Pisküvi", ProductId="3", ProductPrice=1.75m, ProductQuantity=2}
                         }
                     }
                 }
             };
 
-            string roomOrder = JsonConvert.SerializeObject(test);
+            string roomBasket = JsonConvert.SerializeObject(roomBasket.ToString());
+            */
 
             var eventMessage = new BasketConfirmedIntegrationEvent(roomOrder);
             try
             {
                 _eventBus.Publish(eventMessage);
+                await _basketRepository.RepositoryContext.StringGetDeleteAsync(roomName);
             }
             catch(Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
-
-            return Task.CompletedTask;
         }
     }
 }

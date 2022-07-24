@@ -1,10 +1,10 @@
 ﻿namespace OrderService.API.Repositories
 {
-    public class CacheOrderRepository : ICacheOrderRepository<RoomOrderViewModel>
+    public class CacheOrderRepository : ICacheOrderRepository
     {
         protected IConnectionMultiplexer _connectionMultiplexer;
-        protected IDatabase RepositoryContext { get; set; }
-        protected ISubscriber Subscriber { get; set; }
+        public IDatabase RepositoryContext { get; init; }
+        public ISubscriber Subscriber { get; init; }
         public CacheOrderRepository(IConnectionMultiplexer connectionMultiplexer)
         {
             _connectionMultiplexer = connectionMultiplexer;
@@ -12,6 +12,7 @@
             Subscriber = connectionMultiplexer.GetSubscriber();
         }
 
+        /*
         public List<string> ScanKeys(string match)
         {
             var schemas = new List<string>();
@@ -42,5 +43,6 @@
         public void SubscribeToChannel(string channel) => Subscriber.Subscribe(channel);
 
         public void UnSubscribeFromChannel(string channel) => Subscriber.Unsubscribe(channel);
+        */
     }
 }

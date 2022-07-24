@@ -18,6 +18,6 @@
 
     public enum MessageCodes
     {
-        
+        OrderNotFound
     }
 }

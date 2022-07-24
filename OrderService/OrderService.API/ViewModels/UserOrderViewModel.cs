@@ -2,13 +2,16 @@
 {
     public class UserOrderViewModel
     {
-        [JsonProperty]
-        public string UserEmail { get; set; }
+        public string? OrderId { get; set; }
 
-        [JsonProperty]
-        public List<UserOrderItemViewModel> UserOrderItems { get; set; }
+        public string UserId { get; set; }
 
-        [JsonProperty]
+        public string CreatedOrderUserId { get; set; }
+
+        public string RoomName { get; set; }
+
+        public List<UserOrderItemViewModel> Products { get; set; }
+
         public DateTime OrderDate { get; set; }
     }
 }

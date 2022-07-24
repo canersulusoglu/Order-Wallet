@@ -2,10 +2,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Geliþtirme Ortamý Deðiþkenlerini Yükleme
 string envName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+string appSettingsFile = (envName == "Development") ? "appsettings.Development.json" : "appsettings.json";
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{envName}.json", optional: true)
+    .AddJsonFile(appSettingsFile, optional: false, reloadOnChange: true)
     .AddEnvironmentVariables();
 
 // Add Controllers
@@ -36,7 +36,7 @@ SetupRabbitMQ(builder);
 // Add Repositories
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
-builder.Services.AddSingleton<ICacheOrderRepository<RoomOrderViewModel>>(provider => new CacheOrderRepository(redis));
+builder.Services.AddSingleton<ICacheOrderRepository>(provider => new CacheOrderRepository(redis));
 
 // Add Services
 builder.Services.AddScoped<IPastOrdersService>(service =>
@@ -47,7 +47,8 @@ builder.Services.AddScoped<IPastOrdersService>(service =>
 );
 builder.Services.AddSingleton<ICurrentOrdersService>(service =>
     new CurrentOrdersService(
-        service.GetRequiredService<ICacheOrderRepository<RoomOrderViewModel>>()
+        service.GetRequiredService<ICacheOrderRepository>(),
+        service.GetRequiredService<IOrderRepository>()
     )
 );
 

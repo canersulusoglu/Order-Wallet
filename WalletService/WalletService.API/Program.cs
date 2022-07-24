@@ -2,10 +2,10 @@ var builder = WebApplication.CreateBuilder(args);
 //start up a 6 versiyonunda gerek yok o yüzden program.cs dosyasýnda direkt iþlem yapýyoruz 
 // Geliþtirme Ortamý Deðiþkenlerini Yükleme
 string envName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+string appSettingsFile = (envName == "Development") ? "appsettings.Development.json" : "appsettings.json";
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{envName}.json", optional: true)
+    .AddJsonFile(appSettingsFile, optional: false, reloadOnChange: true)
     .AddEnvironmentVariables();
 
 // Add Controllers

@@ -1,6 +1,6 @@
 ﻿namespace BasketService.API.Controllers.BasketController
 {
-    [Route("api/Basket/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class BasketController : ControllerBase
     {
@@ -14,10 +14,15 @@
         [HttpPost("getBasket")]
         [ProducesResponseType(typeof(Response<RoomBasketViewModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> GetBasket(string roomName)
+        public async Task<IActionResult> GetBasket()
         {
             try
             {
+                /*
+                /* Identity Here
+                var userId, userRoom = _identityService.GetUserIdentity();
+                */
+                string roomName = "500";
                 RoomBasketViewModel roomBasket = await _basketService.GetBasket(roomName);
 
                 return Ok(new Response<RoomBasketViewModel>
@@ -47,7 +52,12 @@
         {
             try
             {
-                await _basketService.UpdateBasket(roomBasketViewModel);
+                /*
+                /* Identity Here
+                var userId, userRoom = _identityService.GetUserIdentity();
+                */
+                string roomName = "500";
+                await _basketService.UpdateBasket(roomName, roomBasketViewModel);
                 return Ok(new Response
                 {
                     isSuccess=true
@@ -62,10 +72,15 @@
         [HttpDelete("deleteBasket")]
         [ProducesResponseType(typeof(Response), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> DeleteBasket(string roomName)
+        public async Task<IActionResult> DeleteBasket()
         {
             try
             {
+                /*
+                /* Identity Here
+                var userId, userRoom = _identityService.GetUserIdentity();
+                */
+                string roomName = "500";
                 await _basketService.DeleteBasket(roomName);
                 return Ok(new Response
                 {

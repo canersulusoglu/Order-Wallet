@@ -2,10 +2,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Geliþtirme Ortamý Deðiþkenlerini Yükleme
 string envName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+string appSettingsFile = (envName == "Development") ? "appsettings.Development.json" : "appsettings.json";
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{envName}.json", optional: true)
+    .AddJsonFile(appSettingsFile, optional: false, reloadOnChange: true)
     .AddEnvironmentVariables();
 
 // Add Controllers
@@ -24,17 +24,17 @@ var redis = ConnectionMultiplexer.Connect(RedisURI);
 SetupRabbitMQ(builder);
 
 // Add Repositories
-builder.Services.AddSingleton<IBasketRepository<RoomBasketViewModel>>(provider => new BasketRepository(redis));
+builder.Services.AddSingleton<IBasketRepository>(provider => new BasketRepository(redis));
 
 // Add Services
 builder.Services.AddSingleton<IBasketService>(service =>
     new BasketService.API.Services.Basket.BasketService(
-        service.GetRequiredService<IBasketRepository<RoomBasketViewModel>>()
+        service.GetRequiredService<IBasketRepository>()
     )
 );
 builder.Services.AddSingleton<ICheckoutService>(service =>
     new CheckoutService(
-        service.GetRequiredService<IBasketRepository<RoomBasketViewModel>>(),
+        service.GetRequiredService<IBasketRepository>(),
         service.GetRequiredService<IEventBus>()
     )
 );

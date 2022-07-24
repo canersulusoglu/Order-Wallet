@@ -12,11 +12,9 @@
                 entity.HasKey(x => x.Id);
                 entity.Property(x => x.Id).UseIdentityColumn();
                 entity.HasMany(x => x.OrderItems).WithOne(x => x.Order);
-                entity.Property(x => x.UserEmail).IsRequired();
+                entity.Property(x => x.UserId).IsRequired();
                 entity.Property(x => x.RoomName).IsRequired();
-                entity.Property(x => x.EmployeeEmail).IsRequired();
-                entity.Property(x => x.EmployeeName).IsRequired();
-                entity.Property(x => x.EmployeeSurname).IsRequired();
+                entity.Property(x => x.EmployeeId).IsRequired();
             });
 
             modelBuilder.Entity<OrderItem>(entity =>

@@ -2,24 +2,77 @@
 {
     public class BasketConfirmedIntegrationEventHandling : IIntegrationEventHandler<BasketConfirmedIntegrationEvent>
     {
-        private readonly ICacheOrderRepository<RoomOrderViewModel> _cacheOrderRepository;
+        private readonly ICacheOrderRepository _cacheOrderRepository;
 
-        public BasketConfirmedIntegrationEventHandling(ICacheOrderRepository<RoomOrderViewModel> cacheOrderRepository)
+        public BasketConfirmedIntegrationEventHandling(ICacheOrderRepository cacheOrderRepository)
         {
             _cacheOrderRepository = cacheOrderRepository;
         }
 
-        public Task Handle(BasketConfirmedIntegrationEvent @event)
+        public async Task Handle(BasketConfirmedIntegrationEvent @event)
         {
-            // Basket.API 'den gelen sipariş oluşturma isteği
+            // Request that is creating order from Basket.API checkoutBasket
             if (@event.Id != Guid.Empty)
             {
                 dynamic roomOrder = JObject.Parse(@event.RoomOrder);
-                Console.WriteLine(roomOrder);
+                string roomName = roomOrder.RoomName;
+                string confirmedBasketUserId = roomOrder.ConfirmedBasketUserId;
 
-                _cacheOrderRepository.AddStringKey(roomOrder.RoomName, roomOrder);
+                // Split room order to user orders
+                List<UserOrderViewModel> userOrders = new List<UserOrderViewModel>();
+
+                foreach (dynamic userBasket in roomOrder.UserBaskets)
+                {
+                    List<UserOrderItemViewModel> products = new List<UserOrderItemViewModel>();
+                    foreach (dynamic basketItem in userBasket.UserBasketItems) 
+                    {
+                        products.Add(new UserOrderItemViewModel
+                        {
+                            ProductId = basketItem.ProductId,
+                            ProductName = basketItem.ProductName,
+                            ProductPrice = basketItem.ProductPrice,
+                            ProductQuantity = basketItem.ProductQuantity
+                        });
+                    }
+                    UserOrderViewModel userOrder = new UserOrderViewModel
+                    {
+                        OrderId = Guid.NewGuid().ToString(),
+                        UserId = userBasket.UserId,
+                        CreatedOrderUserId = confirmedBasketUserId,
+                        RoomName = roomName,
+                        Products = products,
+                        OrderDate = DateTime.UtcNow
+                    };
+                    userOrders.Add(userOrder);
+                }
+
+                var employeeChannel = "orderwallet-employees";
+                foreach (UserOrderViewModel userOrder in userOrders)
+                {
+                    try
+                    {
+                        // Creating user orders
+                        var storedValue = JsonConvert.SerializeObject(userOrder);
+                        var roomOrderIdsKey = "Room" + roomName + "OrderIds";
+                        var userOrderIdsKey = "User" + userOrder.UserId + "OrderIds";
+                        await _cacheOrderRepository.RepositoryContext.SetAddAsync("Rooms", roomName);
+                        await _cacheOrderRepository.RepositoryContext.ListLeftPushAsync(roomOrderIdsKey, userOrder.OrderId);
+                        await _cacheOrderRepository.RepositoryContext.ListLeftPushAsync(userOrderIdsKey, userOrder.OrderId);
+                        await _cacheOrderRepository.RepositoryContext.ListLeftPushAsync("OrderIds", userOrder.OrderId);
+                        await _cacheOrderRepository.RepositoryContext.StringSetAsync(userOrder.OrderId, storedValue);
+                        // Send a notification to employees
+                        await _cacheOrderRepository.Subscriber.PublishAsync(employeeChannel, storedValue);
+                    }
+                    catch
+                    {
+                        Console.WriteLine("An error accured when creating user order!");
+                    }
+                }
             }
-            return Task.CompletedTask;
+            else
+            {
+                Console.WriteLine("BasketConfirmedIntegrationEvent is null!");
+            }
         }
     }
 }

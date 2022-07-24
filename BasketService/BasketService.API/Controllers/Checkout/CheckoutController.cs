@@ -1,6 +1,6 @@
 ﻿namespace BasketService.API.Controllers.Checkout
 {
-    [Route("api/Checkout/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class CheckoutController : ControllerBase
     {
@@ -14,11 +14,17 @@
         [HttpPost("checkoutBasket")]
         [ProducesResponseType(typeof(Response<RoomBasketViewModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> CheckoutBasketAsync(string roomName)
+        public async Task<IActionResult> CheckoutBasketAsync()
         {
             try
             {
-                await _checkoutService.confirmBasket(roomName);
+                /*
+                /* Identity Here
+                var userId, userRoom = _identityService.GetUserIdentity();
+                */
+                string userId = "userTest";
+                string roomName = "500";
+                await _checkoutService.confirmBasket(userId, roomName);
                 return Ok(new Response
                 {
                     isSuccess = true

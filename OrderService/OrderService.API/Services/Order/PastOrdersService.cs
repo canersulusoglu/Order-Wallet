@@ -11,17 +11,18 @@
             _orderItemRepository = orderItemRepository;
         }
 
-        public List<Order> GetUserPastOrders(string userEmail)
+        public List<Order> GetUserPastOrders(string userId, int itemsPerPage, int pageNumber)
         {
-            IQueryable<Order> UserPastOrders = _orderRepository.FindByCondition(x => x.UserEmail == userEmail);
-            return UserPastOrders.ToList();
+            int offset = (pageNumber == 1) ? 0 : (pageNumber - 1) * itemsPerPage;
+            List<Order> orders = _orderRepository.RepositoryContext.Include(x => x.OrderItems).Where(x => x.UserId == userId).Skip(offset).Take(itemsPerPage).OrderByDescending(x => x.CreatedTime).ToList();
+            return orders;
         }
 
         public List<Order> GetAllPastOrders(int itemsPerPage, int pageNumber)
         {
             int offset = (pageNumber == 1) ? 0 : (pageNumber - 1) * itemsPerPage;
-            IQueryable<Order> PastOrders = _orderRepository.FindWithLimitAndOffset(itemsPerPage, offset);
-            return PastOrders.ToList();
+            List<Order> orders =  _orderRepository.RepositoryContext.Include(x => x.OrderItems).Skip(offset).Take(itemsPerPage).OrderByDescending(x => x.CreatedTime).ToList();
+            return orders;
         }
     }
 }

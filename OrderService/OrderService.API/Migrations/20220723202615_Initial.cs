@@ -16,11 +16,9 @@ namespace OrderService.API.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<string>(type: "text", nullable: false),
                     RoomName = table.Column<string>(type: "text", nullable: false),
-                    UserEmail = table.Column<string>(type: "text", nullable: false),
-                    EmployeeEmail = table.Column<string>(type: "text", nullable: false),
-                    EmployeeName = table.Column<string>(type: "text", nullable: false),
-                    EmployeeSurname = table.Column<string>(type: "text", nullable: false),
+                    EmployeeId = table.Column<string>(type: "text", nullable: false),
                     CreatedTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -35,6 +33,7 @@ namespace OrderService.API.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ProductId = table.Column<string>(type: "text", nullable: false),
                     ProductName = table.Column<string>(type: "text", nullable: false),
                     ProductPrice = table.Column<decimal>(type: "numeric", nullable: false),
                     ProductQuantity = table.Column<int>(type: "integer", nullable: false),

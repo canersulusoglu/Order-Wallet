@@ -2,14 +2,8 @@
 {
     public class UserBasketViewModel
     {
-        [JsonProperty]
-        public string UserEmail { get; set; }
+        public string UserId { get; set; }
 
-        [JsonProperty]
         public List<UserBasketItemViewModel> UserBasketItems { get; set; }
-
-        [JsonProperty]
-        public DateTime ? OrderDate  { get; set; }
-
     }
 }

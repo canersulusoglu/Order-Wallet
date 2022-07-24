@@ -2,39 +2,36 @@
 {
     public class BasketService : IBasketService
     {
-        private readonly IBasketRepository<RoomBasketViewModel> _basketRepository;
+        private readonly IBasketRepository _basketRepository;
      
-        public BasketService(IBasketRepository<RoomBasketViewModel> basketRepository)
+        public BasketService(IBasketRepository basketRepository)
         {
             _basketRepository=basketRepository;
         }
 
-        public Task<RoomBasketViewModel> DeleteBasket(string roomName)
+        public async Task DeleteBasket(string roomName)
         {
-            var deletedBasket = _basketRepository.DeleteStringKey(roomName);
-            if(deletedBasket == null)
+            RedisValue deletedBasket = await _basketRepository.RepositoryContext.StringGetDeleteAsync(roomName);
+            if(deletedBasket.IsNullOrEmpty)
             {
                 throw new BasketNotFoundException();
             }
-            return Task.FromResult(deletedBasket);
-
         }
 
-        public Task<RoomBasketViewModel> GetBasket(string roomName)
+        public async Task<RoomBasketViewModel> GetBasket(string roomName)
         {
-            var basket = _basketRepository.GetStringKey(roomName);
-            if (basket == null)
+            RedisValue basket = await _basketRepository.RepositoryContext.StringGetAsync(roomName);
+            if (basket.IsNullOrEmpty)
             {
                 throw new BasketNotFoundException();
             }
-            return Task.FromResult(basket);
+            return JsonConvert.DeserializeObject<RoomBasketViewModel>(basket.ToString());
         }
 
-        public Task<RoomBasketViewModel> UpdateBasket(RoomBasketViewModel roomBasketViewModel)
+        public async Task UpdateBasket(string roomName, RoomBasketViewModel roomBasketViewModel)
         {
-            var basket = _basketRepository.UpdateStringKey(roomBasketViewModel.RoomName, roomBasketViewModel);
-
-            return Task.FromResult(basket);
+            string storedValue = JsonConvert.SerializeObject(roomBasketViewModel);
+            await _basketRepository.RepositoryContext.StringSetAsync(roomName, storedValue);
         }
     }
 }
