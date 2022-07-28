@@ -2,8 +2,12 @@
 {
     public interface ICurrentOrdersService
     {
-        public List<RoomOrderViewModel> GetAllCurrentOrders();
-        public List<UserOrderViewModel> GetUserCurrentOrders(string userEmail, string roomName);
-        public RoomOrderViewModel GetRoomOrder(string roomName);
+        public Task<string[]> GetUserOrderIds(string userEmail);
+        public Task<string[]> GetOrderIds();
+        public Task<RoomOrder> GetUserOrder(string orderId);
+        public Task<List<RoomOrder>> GetUserCurrentOrders(string userEmail);
+        public Task<List<RoomOrder>> GetAllCurrentOrders();
+        public Task FinishOrder(string orderId, string employeeEmail);
+        public Task FinishOrders(string[] orderIds, string employeeEmail);
     }
 }

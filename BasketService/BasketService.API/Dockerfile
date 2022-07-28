@@ -7,10 +7,11 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["BasketService.API/BasketService.API.csproj", "BasketService.API/"]
-RUN dotnet restore "BasketService.API/BasketService.API.csproj"
+COPY ["BasketService/BasketService.API/BasketService.API.csproj", "BasketService/BasketService.API/"]
+COPY ["EventBus/EventBus.RabbitMQ/EventBus.RabbitMQ.csproj", "EventBus/EventBus.RabbitMQ/"]
+RUN dotnet restore "BasketService/BasketService.API/BasketService.API.csproj"
 COPY . .
-WORKDIR "/src/BasketService.API"
+WORKDIR "/src/BasketService/BasketService.API"
 RUN dotnet build "BasketService.API.csproj" -c Release -o /app/build
 
 FROM build AS publish

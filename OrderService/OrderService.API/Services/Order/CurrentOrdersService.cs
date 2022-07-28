@@ -2,43 +2,116 @@
 {
     public class CurrentOrdersService : ICurrentOrdersService
     {
-        private readonly ICacheOrderRepository<RoomOrderViewModel> _cacheOrderRepository;
+        private readonly ICacheOrderRepository _cacheOrderRepository;
+        private readonly IRoomOrderRepository _orderRepository;
 
-        public CurrentOrdersService(ICacheOrderRepository<RoomOrderViewModel> cacheOrderRepository)
+        public CurrentOrdersService(ICacheOrderRepository cacheOrderRepository, IRoomOrderRepository orderRepository)
         {
             _cacheOrderRepository = cacheOrderRepository;
+            _orderRepository = orderRepository;
         }
 
-        public List<UserOrderViewModel> GetUserCurrentOrders(string userEmail, string roomName)
+        public async Task<string[]> GetUserOrderIds(string userEmail)
         {
-            RoomOrderViewModel? roomOrder = _cacheOrderRepository.GetStringKey(roomName);
-            if (roomOrder == null)
+            var userOrderIdsKey = "User" + userEmail + "OrderIds";
+            RedisValue[] orderIds = await _cacheOrderRepository.RepositoryContext.ListRangeAsync(userOrderIdsKey, 0, -1);
+            return Array.ConvertAll(orderIds, x => x.ToString());
+        }
+
+        public async Task<string[]> GetOrderIds()
+        {
+            RedisValue[] orderIds = await _cacheOrderRepository.RepositoryContext.ListRangeAsync("OrderIds", 0, -1);
+            return Array.ConvertAll(orderIds, x => x.ToString());
+        }
+
+        public async Task<RoomOrder> GetUserOrder(string orderId)
+        {
+            RedisValue orderValue = await _cacheOrderRepository.RepositoryContext.StringGetAsync(orderId);
+            if (orderValue.IsNullOrEmpty)
             {
                 throw new OrderNotFoundException();
             }
-            return roomOrder.UserOrders.FindAll(x => x.UserEmail == userEmail);
+            return JsonConvert.DeserializeObject<RoomOrder>(orderValue.ToString());
         }
 
-        public List<RoomOrderViewModel> GetAllCurrentOrders()
+        public async Task<List<RoomOrder>> GetUserCurrentOrders(string userEmail)
         {
-            List<RoomOrderViewModel> roomOrders = new List<RoomOrderViewModel>();
-            List<string> allOrdersKeys = _cacheOrderRepository.ScanKeys("*");
-            foreach (string roomOrderKey in allOrdersKeys)
+            List<RoomOrder> userCurrentOrders = new List<RoomOrder>();
+            string[] userOrderIds = await GetUserOrderIds(userEmail);
+            foreach (string orderId in userOrderIds)
             {
-                RoomOrderViewModel roomOrder = _cacheOrderRepository.GetStringKey(roomOrderKey);
-                roomOrders.Add(roomOrder);
+                RoomOrder userOrder = await GetUserOrder(orderId);
+                userCurrentOrders.Add(userOrder);
             }
-            return roomOrders;
+            return userCurrentOrders;
         }
 
-        public RoomOrderViewModel GetRoomOrder(string roomName)
+        public async Task<List<RoomOrder>> GetAllCurrentOrders()
         {
-            RoomOrderViewModel? roomOrder = _cacheOrderRepository.GetStringKey(roomName);
-            if (roomOrder == null)
+            List<RoomOrder> currentOrders = new List<RoomOrder>();
+            string[] allOrderIds = await GetOrderIds();
+            foreach (string orderId in allOrderIds)
             {
-                throw new OrderNotFoundException();
+                RoomOrder userOrder = await GetUserOrder(orderId);
+                currentOrders.Add(userOrder);
             }
-            return roomOrder;
+            return currentOrders;
+        }
+
+        public async Task FinishOrder(string orderId, string employeeEmail)
+        {
+            RoomOrder roomOrder = await GetUserOrder(orderId);
+
+            List<UserOrder> orderUsers = new List<UserOrder>();
+            foreach (UserOrder userOrder in roomOrder.Users)
+            {
+                UserOrder orderUser = new UserOrder
+                {
+                    UserEmail = userOrder.UserEmail,
+                    UserName = userOrder.UserName,
+                    Products = userOrder.Products.Select(item => new UserOrderItem
+                    {
+                        ProductId = item.ProductId,
+                        ProductName = item.ProductName,
+                        ProductQuantity = item.ProductQuantity,
+                        ProductPrice = item.ProductPrice
+                    }).ToList()
+                };
+
+                orderUsers.Add(orderUser);
+            }
+
+            RoomOrder order = new RoomOrder
+            {
+                OrderId = roomOrder.OrderId,
+                EmployeeEmail = employeeEmail,
+                RoomName = roomOrder.RoomName,
+                ConfirmedBasketUserEmail = roomOrder.ConfirmedBasketUserEmail,
+                ConfirmedBasketUserName = roomOrder.ConfirmedBasketUserName,
+                Users = orderUsers
+            };
+
+            await _orderRepository.RepositoryContext.AddAsync(order);
+            await _orderRepository.SaveChanges();
+
+            // Remove order from cache memory
+            await _cacheOrderRepository.RepositoryContext.StringGetDeleteAsync(roomOrder.OrderId);
+            foreach (UserOrder userBasket in roomOrder.Users)
+            {
+                var userOrderIdsKey = "User" + userBasket.UserEmail + "OrderIds";
+                await _cacheOrderRepository.RepositoryContext.ListRemoveAsync(userOrderIdsKey, roomOrder.OrderId);
+            }
+            await _cacheOrderRepository.RepositoryContext.ListRemoveAsync("OrderIds", roomOrder.OrderId);
+
+            // Publish message to Wallet.API here
+        }
+
+        public async Task FinishOrders(string[] orderIds, string employeeEmail)
+        {
+            foreach (string orderId in orderIds)
+            {
+                await FinishOrder(orderId, employeeEmail);
+            }
         }
     }
 }

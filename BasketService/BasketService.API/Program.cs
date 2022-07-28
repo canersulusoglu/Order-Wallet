@@ -2,14 +2,32 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Geliþtirme Ortamý Deðiþkenlerini Yükleme
 string envName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+string appSettingsFile = (envName == "Development") ? "appsettings.Development.json" : "appsettings.json";
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{envName}.json", optional: true)
+    .AddJsonFile(appSettingsFile, optional: false, reloadOnChange: true)
     .AddEnvironmentVariables();
 
 // Add Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.JsonSerializerOptions.WriteIndented = true;
+});
+
+// Add CORS
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins, policy =>
+    {
+        string[] allowedMethods = { "POST", "DELETE", "PUT" };
+        policy
+        .AllowAnyOrigin()
+        .AllowAnyHeader()
+        .WithMethods(methods: allowedMethods);
+    });
+});
 
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
@@ -24,17 +42,19 @@ var redis = ConnectionMultiplexer.Connect(RedisURI);
 SetupRabbitMQ(builder);
 
 // Add Repositories
-builder.Services.AddSingleton<IBasketRepository<RoomBasketViewModel>>(provider => new BasketRepository(redis));
+builder.Services.AddSingleton<IBasketRepository>(provider => new BasketRepository(redis));
 
 // Add Services
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddTransient<IIdentityService, IdentityService>();
 builder.Services.AddSingleton<IBasketService>(service =>
     new BasketService.API.Services.Basket.BasketService(
-        service.GetRequiredService<IBasketRepository<RoomBasketViewModel>>()
+        service.GetRequiredService<IBasketRepository>()
     )
 );
 builder.Services.AddSingleton<ICheckoutService>(service =>
     new CheckoutService(
-        service.GetRequiredService<IBasketRepository<RoomBasketViewModel>>(),
+        service.GetRequiredService<IBasketRepository>(),
         service.GetRequiredService<IEventBus>()
     )
 );
@@ -45,13 +65,20 @@ var app = builder.Build();
 ConfigureEventBus(app);
 
 // Configure the HTTP request pipeline.
+/*
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+*/
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
+
+// Using CORS Policy
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthorization();
 

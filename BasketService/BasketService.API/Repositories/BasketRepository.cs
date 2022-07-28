@@ -1,10 +1,10 @@
 ﻿namespace BasketService.API.Repositories
 {
-    public class BasketRepository : IBasketRepository<RoomBasketViewModel>
+    public class BasketRepository : IBasketRepository
     {
         protected IConnectionMultiplexer _connectionMultiplexer;
-        protected IDatabase RepositoryContext { get; set; }
-        protected ISubscriber Subscriber { get; set; }
+        public IDatabase RepositoryContext { get; init; }
+        public ISubscriber Subscriber { get; init; }
 
         public BasketRepository(IConnectionMultiplexer connectionMultiplexer)
         {
@@ -12,10 +12,5 @@
             RepositoryContext = connectionMultiplexer.GetDatabase();
             Subscriber = connectionMultiplexer.GetSubscriber();
         }
-
-        public RoomBasketViewModel? DeleteStringKey(string key) => JsonConvert.DeserializeObject<RoomBasketViewModel>(RepositoryContext.StringGetDelete(key).ToString());
-        public RoomBasketViewModel? GetStringKey(string key) => JsonConvert.DeserializeObject<RoomBasketViewModel>(RepositoryContext.StringGet(key).ToString());
-        public RoomBasketViewModel UpdateStringKey(string key, RoomBasketViewModel entity) => JsonConvert.DeserializeObject<RoomBasketViewModel>(RepositoryContext.StringGetSet(key, JsonConvert.SerializeObject(entity)).ToString());
-
     }
 }

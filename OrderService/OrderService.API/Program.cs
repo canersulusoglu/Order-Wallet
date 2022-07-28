@@ -2,10 +2,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Geliþtirme Ortamý Deðiþkenlerini Yükleme
 string envName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+string appSettingsFile = (envName == "Development") ? "appsettings.Development.json" : "appsettings.json";
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{envName}.json", optional: true)
+    .AddJsonFile(appSettingsFile, optional: false, reloadOnChange: true)
     .AddEnvironmentVariables();
 
 // Add Controllers
@@ -13,6 +13,20 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     options.JsonSerializerOptions.WriteIndented = true;
+});
+
+// Add CORS
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins, policy =>
+    {
+        string[] allowedMethods = { "POST", "DELETE", "PUT" };
+        policy
+        .AllowAnyOrigin()
+        .AllowAnyHeader()
+        .WithMethods(methods: allowedMethods);
+    });
 });
 
 // Swagger/OpenAPI
@@ -34,20 +48,24 @@ var redis = ConnectionMultiplexer.Connect(RedisURI);
 SetupRabbitMQ(builder);
 
 // Add Repositories
-builder.Services.AddScoped<IOrderRepository, OrderRepository>();
-builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
-builder.Services.AddSingleton<ICacheOrderRepository<RoomOrderViewModel>>(provider => new CacheOrderRepository(redis));
+builder.Services.AddScoped<IRoomOrderRepository, RoomOrderRepository>();
+builder.Services.AddScoped<IUserOrderRepository, UserOrderRepository>();
+builder.Services.AddScoped<IUserOrderItemRepository, UserOrderItemRepository>();
+builder.Services.AddSingleton<ICacheOrderRepository>(provider => new CacheOrderRepository(redis));
 
 // Add Services
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddTransient<IIdentityService, IdentityService>();
 builder.Services.AddScoped<IPastOrdersService>(service =>
     new PastOrdersService(
-        service.GetRequiredService<IOrderRepository>(),
-        service.GetRequiredService<IOrderItemRepository>()
+        service.GetRequiredService<IRoomOrderRepository>(),
+        service.GetRequiredService<IUserOrderItemRepository>()
     )
 );
 builder.Services.AddSingleton<ICurrentOrdersService>(service =>
     new CurrentOrdersService(
-        service.GetRequiredService<ICacheOrderRepository<RoomOrderViewModel>>()
+        service.GetRequiredService<ICacheOrderRepository>(),
+        service.GetRequiredService<IRoomOrderRepository>()
     )
 );
 
@@ -57,13 +75,20 @@ var app = builder.Build();
 ConfigureEventBus(app);
 
 // Configure the HTTP request pipeline.
+/*
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+*/
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
+
+// Using CORS Policy
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthorization();
 
@@ -135,5 +160,3 @@ void ConfigureEventBus(IApplicationBuilder app)
     // Basket.API'den verinin gelmesini dinlemek için kanala katýlma iþlemi
     eventBus.Subscribe<BasketConfirmedIntegrationEvent, BasketConfirmedIntegrationEventHandling>();
 }
-
-public partial class Program { }

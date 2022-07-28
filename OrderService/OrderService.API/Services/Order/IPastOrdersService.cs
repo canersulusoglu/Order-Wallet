@@ -2,7 +2,7 @@
 {
     public interface IPastOrdersService
     {
-        public List<Order> GetUserPastOrders(string userEmail);
-        public List<Order> GetAllPastOrders(int itemsPerPage, int pageNumber);
+        public List<RoomOrder> GetUserPastOrders(string userEmail, int itemsPerPage, int pageNumber);
+        public List<RoomOrder> GetAllPastOrders(int itemsPerPage, int pageNumber);
     }
 }

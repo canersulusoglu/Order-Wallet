@@ -2,8 +2,8 @@
 {
     public record BasketConfirmedIntegrationEvent : IntegrationEvent
     {
-        public string RoomOrder { get; init; }
+        public string RoomBasketAndOrder { get; set; }
 
-        public BasketConfirmedIntegrationEvent(string roomOrder) => RoomOrder = roomOrder;
     }
+
 }

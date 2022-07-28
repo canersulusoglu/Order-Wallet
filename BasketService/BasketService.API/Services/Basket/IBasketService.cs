@@ -2,8 +2,8 @@
 {
     public interface IBasketService
     {
-        Task<RoomBasketViewModel> GetBasket(string roomName);
-        Task<RoomBasketViewModel> UpdateBasket(RoomBasketViewModel roomBasketViewModel);
-        Task<RoomBasketViewModel> DeleteBasket(string roomNames);
+        Task<RoomBasket> GetBasket(string basketUserEmail);
+        Task UpdateBasket(string roomName, string confirmedBasketUserEmail, string confirmedBasketUserName, UpdateBasketViewModel basketUsers);
+        Task DeleteBasket(string basketUserEmail);
     }
 }

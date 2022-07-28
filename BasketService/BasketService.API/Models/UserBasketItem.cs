@@ -1,7 +1,9 @@
-﻿namespace OrderService.API.ViewModels
+﻿namespace BasketService.API.Models
 {
-    public class UserOrderItemViewModel
+    public class UserBasketItem
     {
+        public string ProductId { get; set; }
+
         public string ProductName { get; set; }
 
         public decimal ProductPrice { get; set; }

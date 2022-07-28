@@ -1,29 +1,32 @@
 ﻿namespace BasketService.API.Controllers.BasketController
 {
-    [Route("api/Basket/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class BasketController : ControllerBase
     {
         private readonly IBasketService _basketService; // Redis
+        private readonly IIdentityService _identityService;
 
-        public BasketController(IBasketService basketService)
+        public BasketController(IBasketService basketService, IIdentityService identityService)
         {
             _basketService = basketService;
+            _identityService = identityService;
         }
 
         [HttpPost("getBasket")]
-        [ProducesResponseType(typeof(Response<RoomBasketViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(Response<RoomBasket>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> GetBasket(string roomName)
+        public async Task<IActionResult> GetBasket()
         {
             try
             {
-                RoomBasketViewModel roomBasket = await _basketService.GetBasket(roomName);
+                string userEmail = _identityService.GetUserIdentity();
+                RoomBasket userBasket = await _basketService.GetBasket(userEmail);
 
-                return Ok(new Response<RoomBasketViewModel>
+                return Ok(new Response<RoomBasket>
                 {
                     isSuccess = true,
-                    data = roomBasket
+                    data = userBasket
                 });
             }
             catch (BasketNotFoundException ex)
@@ -40,14 +43,18 @@
             }
         }
 
-        [HttpPost("updateBasket")]
+        [HttpPut("updateBasket")]
         [ProducesResponseType(typeof(Response), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<ActionResult> UpdateBasket(RoomBasketViewModel roomBasketViewModel)
+        public async Task<ActionResult> UpdateBasket(UpdateBasketViewModel request)
         {
             try
             {
-                await _basketService.UpdateBasket(roomBasketViewModel);
+                string userEmail = _identityService.GetUserIdentity();
+                string userName = _identityService.GetUserName();
+                string userRoomName = _identityService.GetUserRoomName();
+
+                await _basketService.UpdateBasket(userRoomName, userEmail, userName, request);
                 return Ok(new Response
                 {
                     isSuccess=true
@@ -62,11 +69,12 @@
         [HttpDelete("deleteBasket")]
         [ProducesResponseType(typeof(Response), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> DeleteBasket(string roomName)
+        public async Task<IActionResult> DeleteBasket()
         {
             try
             {
-                await _basketService.DeleteBasket(roomName);
+                string userEmail = _identityService.GetUserIdentity();
+                await _basketService.DeleteBasket(userEmail);
                 return Ok(new Response
                 {
                     isSuccess=true

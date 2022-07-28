@@ -5,27 +5,38 @@
     public class CurrentOrdersController : ControllerBase
     {
         private readonly ICurrentOrdersService _currentOrdersService;
+        private readonly IIdentityService _identityService;
 
-        public CurrentOrdersController(ICurrentOrdersService currentOrdersService)
+        public CurrentOrdersController(ICurrentOrdersService currentOrdersService, IIdentityService identityService)
         {
             _currentOrdersService = currentOrdersService;
+            _identityService = identityService;
         }
 
         [Route("getCurrentOrdersOfUser")]
         [HttpPost]
-        [ProducesResponseType(typeof(Dictionary<string, UserOrderViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(Response<List<RoomOrder>>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public IActionResult GetCurrentOrdersOfUser()
+        public async Task<IActionResult> GetCurrentOrdersOfUser()
         {
             try
             {
-                /* Identity Here
-                var userEmail = _identityService.GetUserIdentity();
-                */
-                var userEmail = ""; 
-                var roomName = "";
-                var userOrders = _currentOrdersService.GetUserCurrentOrders(userEmail, roomName);
-                return Ok(userOrders);
+                string userEmail = _identityService.GetUserIdentity();
+
+                List<RoomOrder> userOrders = await _currentOrdersService.GetUserCurrentOrders(userEmail);
+                return Ok(new Response<List<RoomOrder>>
+                {
+                    isSuccess = true,
+                    data = userOrders
+                });
+            }
+            catch(OrderNotFoundException ex)
+            {
+                return Ok(new Response
+                {
+                    isSuccess = false,
+                    messageCode = MessageCodes.OrderNotFound
+                });
             }
             catch
             {
@@ -33,22 +44,91 @@
             }
         }
 
-        [Route("getCurrentOrdersToEmployee")]
+        [Route("getCurrentUserOrdersToEmployee")]
         [HttpPost]
-        [ProducesResponseType(typeof(Dictionary<string, List<RoomOrderViewModel>>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(Response<List<RoomOrder>>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public IActionResult GetCurrentOrdersToEmployee()
+        public async Task<IActionResult> GetCurrentUserOrdersToEmployee()
         {
             try
             {
-                /*
-                /* Identity Here
-                var userEmail = _identityService.GetUserIdentity();
-                */
+                string userEmail = _identityService.GetUserIdentity();
 
-                var allOrdersByRoomName = _currentOrdersService.GetAllCurrentOrders();
+                List<RoomOrder> allCurrentOrders = await _currentOrdersService.GetAllCurrentOrders();
+                return Ok(new Response<List<RoomOrder>>
+                {
+                    isSuccess = true,
+                    data = allCurrentOrders
+                });
+            }
+            catch (OrderNotFoundException ex)
+            {
+                return Ok(new Response
+                {
+                    isSuccess = false,
+                    messageCode = MessageCodes.OrderNotFound
+                });
+            }
+            catch
+            {
+                return Ok();
+            }
+        }
 
-                return Ok(allOrdersByRoomName);
+
+        [Route("approveOrderByEmployee")]
+        [HttpPost]
+        [ProducesResponseType(typeof(Response), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        public async Task<IActionResult> ApproveOrderByEmployee(string orderId)
+        {
+            try
+            {
+                string userEmail = _identityService.GetUserIdentity();
+
+                await _currentOrdersService.FinishOrder(orderId, userEmail);
+                return Ok(new Response
+                {
+                    isSuccess = true
+                });
+            }
+            catch (OrderNotFoundException ex)
+            {
+                return Ok(new Response
+                {
+                    isSuccess = false,
+                    messageCode = MessageCodes.OrderNotFound
+                });
+            }
+            catch
+            {
+                return Ok();
+            }
+        }
+
+        [Route("approveOrdersByEmployee")]
+        [HttpPost]
+        [ProducesResponseType(typeof(Response), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        public async Task<IActionResult> ApproveOrdersByEmployee(string[] orderIds)
+        {
+            try
+            {
+                string userEmail = _identityService.GetUserIdentity();
+
+                await _currentOrdersService.FinishOrders(orderIds, userEmail);
+                return Ok(new Response
+                {
+                    isSuccess = true
+                });
+            }
+            catch (OrderNotFoundException ex)
+            {
+                return Ok(new Response
+                {
+                    isSuccess = false,
+                    messageCode = MessageCodes.OrderNotFound
+                });
             }
             catch
             {

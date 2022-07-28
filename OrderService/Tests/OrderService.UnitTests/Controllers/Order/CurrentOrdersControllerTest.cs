@@ -20,7 +20,7 @@
                 new UserOrderViewModel { UserEmail="fake_Email", UserOrderItems=new List<UserOrderItemViewModel>(), OrderDate=DateTime.UtcNow },
             };
             _currentOrdersService
-                .Setup(x => x.GetUserCurrentOrders(It.IsAny<string>(), It.IsAny<string>()))
+                .Setup(x => x.GetUserCurrentOrdersAsync(It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(fakeUserOrders);
             var currentOrdersController = new CurrentOrdersController(_currentOrdersService.Object);
 
@@ -46,7 +46,7 @@
                 new RoomOrderViewModel { RoomName="104", UserOrders=new List<UserOrderViewModel>() },
             };
             _currentOrdersService
-                .Setup(x => x.GetAllCurrentOrders())
+                .Setup(x => x.GetAllCurrentOrdersAsync())
                 .Returns(fakeOrders);
             var currentOrdersController = new CurrentOrdersController(_currentOrdersService.Object);
 

@@ -2,53 +2,40 @@
 {
     public class CheckoutService : ICheckoutService
     {
-        private readonly IBasketRepository<RoomBasketViewModel> _roomBasketRepository;
+        private readonly IBasketRepository _basketRepository;
         private readonly IEventBus _eventBus;
 
-        public CheckoutService(IBasketRepository<RoomBasketViewModel> roomBasketRepository, IEventBus eventBus)
+        public CheckoutService(IBasketRepository basketRepository, IEventBus eventBus)
         {
-            _roomBasketRepository = roomBasketRepository;
+            _basketRepository = basketRepository;
             _eventBus = eventBus;
         }
-        public Task confirmBasket(string roomName)
+        public async Task confirmBasket(string basketUserEmail, string basketUserName, string orderMessage)
         {
-            /*
-            RoomOrderViewModel? roomBasket = _roomBasketRepository.GetStringKey(roomName);
-            if (roomBasket == null)
+            RedisValue basket = await _basketRepository.RepositoryContext.StringGetAsync(basketUserEmail);
+            if (basket.IsNullOrEmpty)
             {
                 throw new BasketNotFoundException();
             }
-            */
 
-            RoomBasketViewModel test = new RoomBasketViewModel
-            {
-                RoomName = "101",
-                UserBaskets = new List<UserBasketViewModel>
-                {
-                    new UserBasketViewModel
-                    {
-                        UserEmail="cscaner26@gmail.com",
-                        UserBasketItems=new List<UserBasketItemViewModel>
-                        {
-                            new UserBasketItemViewModel{ProductName="Tea", ProductPrice=1.5m, ProductQuantity=3}
-                        }
-                    }
-                }
-            };
+            RoomBasket roomBasket = JsonConvert.DeserializeObject<RoomBasket>(basket.ToString());
+            roomBasket.OrderId = Guid.NewGuid().ToString();
+            roomBasket.OrderMessage = orderMessage;
+            roomBasket.ConfirmedBasketUserEmail = basketUserEmail;
+            roomBasket.ConfirmedBasketUserName = basketUserName;
+            roomBasket.OrderDate = DateTime.UtcNow;
 
-            string roomOrder = JsonConvert.SerializeObject(test);
-
-            var eventMessage = new BasketConfirmedIntegrationEvent(roomOrder);
+            string roomBasketJSON = JsonConvert.SerializeObject(roomBasket);
+            var eventMessage = new BasketConfirmedIntegrationEvent { RoomBasketAndOrder = roomBasketJSON };
             try
             {
                 _eventBus.Publish(eventMessage);
+                await _basketRepository.RepositoryContext.StringGetDeleteAsync(basketUserEmail);
             }
             catch(Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
-
-            return Task.CompletedTask;
         }
     }
 }

@@ -2,9 +2,9 @@
 {
     public static class EventBusConfigurations
     {
-        public const string EventBusConnection = "localhost";
-        public const string EventBusUserName = "";
-        public const string EventBusPassword = "";
-        public const int EventBusRetryCount = 5;
+        public static string EventBusConnection = (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development") ? "localhost" : "eventbus";
+        public static string EventBusUserName = "";
+        public static string EventBusPassword = "";
+        public static int EventBusRetryCount = 5;
     }
 }
