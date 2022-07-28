@@ -9,7 +9,25 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 // Add Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.JsonSerializerOptions.WriteIndented = true;
+});
+
+// Add CORS
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins, policy =>
+    {
+        string[] allowedMethods = { "POST", "DELETE", "PUT" };
+        policy
+        .AllowAnyOrigin()
+        .AllowAnyHeader()
+        .WithMethods(methods: allowedMethods);
+    });
+});
 
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
@@ -27,6 +45,8 @@ SetupRabbitMQ(builder);
 builder.Services.AddSingleton<IBasketRepository>(provider => new BasketRepository(redis));
 
 // Add Services
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddTransient<IIdentityService, IdentityService>();
 builder.Services.AddSingleton<IBasketService>(service =>
     new BasketService.API.Services.Basket.BasketService(
         service.GetRequiredService<IBasketRepository>()
@@ -45,13 +65,20 @@ var app = builder.Build();
 ConfigureEventBus(app);
 
 // Configure the HTTP request pipeline.
+/*
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+*/
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
+
+// Using CORS Policy
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthorization();
 

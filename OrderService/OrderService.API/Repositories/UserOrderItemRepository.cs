@@ -1,13 +1,13 @@
 ﻿namespace OrderService.API.Repositories
 {
-    public class OrderItemRepository : IOrderItemRepository
+    public class UserOrderItemRepository : IUserOrderItemRepository
     {
         protected DatabaseContext _databaseContext { get; init; }
-        public DbSet<OrderItem> RepositoryContext { get; init; }
-        public OrderItemRepository(DatabaseContext databasecontext)
+        public DbSet<UserOrderItem> RepositoryContext { get; init; }
+        public UserOrderItemRepository(DatabaseContext databasecontext)
         {
             _databaseContext = databasecontext;
-            RepositoryContext = databasecontext.Set<OrderItem>();
+            RepositoryContext = databasecontext.Set<UserOrderItem>();
         }
         public async Task SaveChanges()
         {

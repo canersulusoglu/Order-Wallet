@@ -5,28 +5,27 @@
     public class PastOrdersController : ControllerBase
     {
         private readonly IPastOrdersService _pastOrdersService;
+        private readonly IIdentityService _identityService;
 
-        public PastOrdersController(IPastOrdersService pastOrdersService)
+        public PastOrdersController(IPastOrdersService pastOrdersService, IIdentityService identityService)
         {
             _pastOrdersService = pastOrdersService;
+            _identityService = identityService;
         }
 
         [Route("getPastOrdersOfUser")]
         [HttpPost]
-        [ProducesResponseType(typeof(Response<List<Order>>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(Response<List<RoomOrder>>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public IActionResult GetPastOrdersOfUserAsync(int itemsPerPage, int pageNumber)
         {
             try
             {
-                /*
-                /* Identity Here
-                var userId, userRoom = _identityService.GetUserIdentity();
-                */
-                var userId = "300";
-                List<Order> userPastOrders = _pastOrdersService.GetUserPastOrders(userId, itemsPerPage, pageNumber);
+                string userEmail = _identityService.GetUserIdentity();
+         
+                List<RoomOrder> userPastOrders = _pastOrdersService.GetUserPastOrders(userEmail, itemsPerPage, pageNumber);
 
-                return Ok(new Response<List<Order>>
+                return Ok(new Response<List<RoomOrder>>
                 {
                     isSuccess = true,
                     data = userPastOrders
@@ -40,15 +39,17 @@
 
         [Route("getPastOrdersToEmployee")]
         [HttpPost]
-        [ProducesResponseType(typeof(Response<List<Order>>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(Response<List<RoomOrder>>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public IActionResult GetPastOrdersToEmployeeAsync(int itemsPerPage, int pageNumber)
         {
             try
             {
-                List<Order> allPastOrders = _pastOrdersService.GetAllPastOrders(itemsPerPage, pageNumber);
+                string userEmail = _identityService.GetUserIdentity();
+
+                List<RoomOrder> allPastOrders = _pastOrdersService.GetAllPastOrders(itemsPerPage, pageNumber);
                 
-                return Ok(new Response<List<Order>>
+                return Ok(new Response<List<RoomOrder>>
                 {
                     isSuccess = true,
                     data = allPastOrders

@@ -1,13 +1,13 @@
 ﻿namespace OrderService.API.Repositories
 {
-    public class OrderRepository : IOrderRepository
+    public class RoomOrderRepository : IRoomOrderRepository
     {
         protected DatabaseContext _databaseContext { get; init; }
-        public DbSet<Order> RepositoryContext { get; init; }
-        public OrderRepository(DatabaseContext databaseContext)
+        public DbSet<RoomOrder> RepositoryContext { get; init; }
+        public RoomOrderRepository(DatabaseContext databaseContext)
         {
             _databaseContext = databaseContext;
-            RepositoryContext = databaseContext.Set<Order>();
+            RepositoryContext = databaseContext.Set<RoomOrder>();
         }
         public async Task SaveChanges()
         {

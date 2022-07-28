@@ -10,45 +10,27 @@
             _basketRepository = basketRepository;
             _eventBus = eventBus;
         }
-        public async Task confirmBasket(string userId, string roomName)
+        public async Task confirmBasket(string basketUserEmail, string basketUserName, string orderMessage)
         {
-            RedisValue roomBasket = await _basketRepository.RepositoryContext.StringGetAsync(roomName);
-            if (roomBasket.IsNullOrEmpty)
+            RedisValue basket = await _basketRepository.RepositoryContext.StringGetAsync(basketUserEmail);
+            if (basket.IsNullOrEmpty)
             {
                 throw new BasketNotFoundException();
             }
 
-            RoomBasketViewModel roomBasketVM = JsonConvert.DeserializeObject<RoomBasketViewModel>(roomBasket);
-            roomBasketVM.ConfirmedBasketUserId = userId;
-            roomBasketVM.RoomName = roomName;
-            string roomOrder = JsonConvert.SerializeObject(roomBasketVM);
-            /*
-            RoomBasketViewModel roomBasket = new RoomBasketViewModel
-            {
-                ConfirmedBasketUserId = userId,
-                RoomName = "101",
-                UserBaskets = new List<UserBasketViewModel>
-                {
-                    new UserBasketViewModel
-                    {
-                        UserId="205",
-                        UserBasketItems=new List<UserBasketItemViewModel>
-                        {
-                            new UserBasketItemViewModel{ProductName="Tea", ProductId="1", ProductPrice=1.5m, ProductQuantity=3},
-                            new UserBasketItemViewModel{ProductName="Pisküvi", ProductId="3", ProductPrice=1.75m, ProductQuantity=2}
-                        }
-                    }
-                }
-            };
+            RoomBasket roomBasket = JsonConvert.DeserializeObject<RoomBasket>(basket.ToString());
+            roomBasket.OrderId = Guid.NewGuid().ToString();
+            roomBasket.OrderMessage = orderMessage;
+            roomBasket.ConfirmedBasketUserEmail = basketUserEmail;
+            roomBasket.ConfirmedBasketUserName = basketUserName;
+            roomBasket.OrderDate = DateTime.UtcNow;
 
-            string roomBasket = JsonConvert.SerializeObject(roomBasket.ToString());
-            */
-
-            var eventMessage = new BasketConfirmedIntegrationEvent(roomOrder);
+            string roomBasketJSON = JsonConvert.SerializeObject(roomBasket);
+            var eventMessage = new BasketConfirmedIntegrationEvent { RoomBasketAndOrder = roomBasketJSON };
             try
             {
                 _eventBus.Publish(eventMessage);
-                await _basketRepository.RepositoryContext.StringGetDeleteAsync(roomName);
+                await _basketRepository.RepositoryContext.StringGetDeleteAsync(basketUserEmail);
             }
             catch(Exception ex)
             {

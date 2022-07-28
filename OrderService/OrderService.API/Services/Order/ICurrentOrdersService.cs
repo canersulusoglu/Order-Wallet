@@ -2,16 +2,12 @@
 {
     public interface ICurrentOrdersService
     {
-        public Task<string[]> GetRoomNamesHaveAnOrder();
-        public Task<string[]> GetRoomOrderIds(string roomName);
-        public Task<string[]> GetUserOrderIds(string userId);
+        public Task<string[]> GetUserOrderIds(string userEmail);
         public Task<string[]> GetOrderIds();
-        public Task<UserOrderViewModel> GetUserOrder(string orderId);
-        public Task<List<UserOrderViewModel>> GetUserCurrentOrders(string userId);
-        public Task<List<UserOrderViewModel>> GetAllCurrentUserOrders();
-        public Task<List<RoomOrderViewModel>> GetAllCurrentRoomOrders();
-        public Task<List<UserOrderViewModel>> GetRoomOrders(string roomName);
-        public Task FinishUserOrder(string orderId, string employeeId);
-        public Task FinishUserOrders(string[] orderIds, string employeeId);
+        public Task<RoomOrder> GetUserOrder(string orderId);
+        public Task<List<RoomOrder>> GetUserCurrentOrders(string userEmail);
+        public Task<List<RoomOrder>> GetAllCurrentOrders();
+        public Task FinishOrder(string orderId, string employeeEmail);
+        public Task FinishOrders(string[] orderIds, string employeeEmail);
     }
 }

@@ -5,28 +5,26 @@
     public class CurrentOrdersController : ControllerBase
     {
         private readonly ICurrentOrdersService _currentOrdersService;
+        private readonly IIdentityService _identityService;
 
-        public CurrentOrdersController(ICurrentOrdersService currentOrdersService)
+        public CurrentOrdersController(ICurrentOrdersService currentOrdersService, IIdentityService identityService)
         {
             _currentOrdersService = currentOrdersService;
+            _identityService = identityService;
         }
 
         [Route("getCurrentOrdersOfUser")]
         [HttpPost]
-        [ProducesResponseType(typeof(Response<List<UserOrderViewModel>>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(Response<List<RoomOrder>>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> GetCurrentOrdersOfUser()
         {
             try
             {
-                /*
-                /* Identity Here
-                var userId, userRoom = _identityService.GetUserIdentity();
-                */
-                string userId = "300";
-                string roomName = "500";
-                List<UserOrderViewModel> userOrders = await _currentOrdersService.GetUserCurrentOrders(userId);
-                return Ok(new Response<List<UserOrderViewModel>>
+                string userEmail = _identityService.GetUserIdentity();
+
+                List<RoomOrder> userOrders = await _currentOrdersService.GetUserCurrentOrders(userEmail);
+                return Ok(new Response<List<RoomOrder>>
                 {
                     isSuccess = true,
                     data = userOrders
@@ -48,54 +46,19 @@
 
         [Route("getCurrentUserOrdersToEmployee")]
         [HttpPost]
-        [ProducesResponseType(typeof(Response<List<UserOrderViewModel>>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(Response<List<RoomOrder>>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> GetCurrentUserOrdersToEmployee()
         {
             try
             {
-                /*
-                /* Identity Here
-                var userId, userRoom = _identityService.GetUserIdentity();
-                */
-                List<UserOrderViewModel> allCurrentOrders = await _currentOrdersService.GetAllCurrentUserOrders();
-                return Ok(new Response<List<UserOrderViewModel>>
+                string userEmail = _identityService.GetUserIdentity();
+
+                List<RoomOrder> allCurrentOrders = await _currentOrdersService.GetAllCurrentOrders();
+                return Ok(new Response<List<RoomOrder>>
                 {
                     isSuccess = true,
                     data = allCurrentOrders
-                });
-            }
-            catch (OrderNotFoundException ex)
-            {
-                return Ok(new Response
-                {
-                    isSuccess = false,
-                    messageCode = MessageCodes.OrderNotFound
-                });
-            }
-            catch
-            {
-                return Ok();
-            }
-        }
-
-        [Route("getCurrentRoomOrdersToEmployee")]
-        [HttpPost]
-        [ProducesResponseType(typeof(Response<List<RoomOrderViewModel>>), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> GetCurrentRoomOrdersToEmployee()
-        {
-            try
-            {
-                /*
-                /* Identity Here
-                var userId, userRoom = _identityService.GetUserIdentity();
-                */
-                List<RoomOrderViewModel> allRoomOrders = await _currentOrdersService.GetAllCurrentRoomOrders();
-                return Ok(new Response<List<RoomOrderViewModel>>
-                {
-                    isSuccess = true,
-                    data = allRoomOrders
                 });
             }
             catch (OrderNotFoundException ex)
@@ -121,12 +84,9 @@
         {
             try
             {
-                /*
-                /* Identity Here
-                var userId, userRoom = _identityService.GetUserIdentity();
-                */
-                string employeeId = "600";
-                await _currentOrdersService.FinishUserOrder(orderId, employeeId);
+                string userEmail = _identityService.GetUserIdentity();
+
+                await _currentOrdersService.FinishOrder(orderId, userEmail);
                 return Ok(new Response
                 {
                     isSuccess = true
@@ -154,12 +114,9 @@
         {
             try
             {
-                /*
-                /* Identity Here
-                var userId, userRoom = _identityService.GetUserIdentity();
-                */
-                string employeeId = "600";
-                await _currentOrdersService.FinishUserOrders(orderIds, employeeId);
+                string userEmail = _identityService.GetUserIdentity();
+
+                await _currentOrdersService.FinishOrders(orderIds, userEmail);
                 return Ok(new Response
                 {
                     isSuccess = true

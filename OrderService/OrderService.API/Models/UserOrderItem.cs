@@ -1,6 +1,6 @@
-﻿namespace BasketService.API.ViewModels
+﻿namespace OrderService.API.Models
 {
-    public class UserBasketItemViewModel
+    public class UserOrderItem : BaseModel
     {
         public string ProductId { get; set; }
 
@@ -9,5 +9,7 @@
         public decimal ProductPrice { get; set; }
 
         public int ProductQuantity { get; set; }
+
+        public UserOrder? UserOrder { get; set; }
     }
 }

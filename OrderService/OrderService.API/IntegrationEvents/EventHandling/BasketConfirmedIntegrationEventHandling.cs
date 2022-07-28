@@ -11,63 +11,31 @@
 
         public async Task Handle(BasketConfirmedIntegrationEvent @event)
         {
-            // Request that is creating order from Basket.API checkoutBasket
             if (@event.Id != Guid.Empty)
             {
-                dynamic roomOrder = JObject.Parse(@event.RoomOrder);
-                string roomName = roomOrder.RoomName;
-                string confirmedBasketUserId = roomOrder.ConfirmedBasketUserId;
+                RoomOrder roomOrder = JsonConvert.DeserializeObject<RoomOrder>(@event.RoomBasketAndOrder);
 
-                // Split room order to user orders
-                List<UserOrderViewModel> userOrders = new List<UserOrderViewModel>();
+                // Sipariş değeri
+                var storedValue = JsonConvert.SerializeObject(roomOrder);
+                await _cacheOrderRepository.RepositoryContext.StringSetAsync(roomOrder.OrderId, storedValue);
 
-                foreach (dynamic userBasket in roomOrder.UserBaskets)
+                // Sipariş verilen diğer kullanıcılar
+                foreach (UserOrder userOrder in roomOrder.Users)
                 {
-                    List<UserOrderItemViewModel> products = new List<UserOrderItemViewModel>();
-                    foreach (dynamic basketItem in userBasket.UserBasketItems) 
-                    {
-                        products.Add(new UserOrderItemViewModel
-                        {
-                            ProductId = basketItem.ProductId,
-                            ProductName = basketItem.ProductName,
-                            ProductPrice = basketItem.ProductPrice,
-                            ProductQuantity = basketItem.ProductQuantity
-                        });
-                    }
-                    UserOrderViewModel userOrder = new UserOrderViewModel
-                    {
-                        OrderId = Guid.NewGuid().ToString(),
-                        UserId = userBasket.UserId,
-                        CreatedOrderUserId = confirmedBasketUserId,
-                        RoomName = roomName,
-                        Products = products,
-                        OrderDate = DateTime.UtcNow
-                    };
-                    userOrders.Add(userOrder);
+                    var userOrderIdsKey = "User" + userOrder.UserEmail + "OrderIds";
+                    await _cacheOrderRepository.RepositoryContext.ListLeftPushAsync(userOrderIdsKey, roomOrder.OrderId);
                 }
 
+                // Sipariş veren kullanıcı
+                var orderOwnerIdsKey = "User" + roomOrder.ConfirmedBasketUserEmail + "OrderIds";
+                await _cacheOrderRepository.RepositoryContext.ListLeftPushAsync(orderOwnerIdsKey, roomOrder.OrderId);
+
+                // Tüm siparişler
+                await _cacheOrderRepository.RepositoryContext.ListLeftPushAsync("OrderIds", roomOrder.OrderId);
+
+                // Kantinciye bildirim yollamak için
                 var employeeChannel = "orderwallet-employees";
-                foreach (UserOrderViewModel userOrder in userOrders)
-                {
-                    try
-                    {
-                        // Creating user orders
-                        var storedValue = JsonConvert.SerializeObject(userOrder);
-                        var roomOrderIdsKey = "Room" + roomName + "OrderIds";
-                        var userOrderIdsKey = "User" + userOrder.UserId + "OrderIds";
-                        await _cacheOrderRepository.RepositoryContext.SetAddAsync("Rooms", roomName);
-                        await _cacheOrderRepository.RepositoryContext.ListLeftPushAsync(roomOrderIdsKey, userOrder.OrderId);
-                        await _cacheOrderRepository.RepositoryContext.ListLeftPushAsync(userOrderIdsKey, userOrder.OrderId);
-                        await _cacheOrderRepository.RepositoryContext.ListLeftPushAsync("OrderIds", userOrder.OrderId);
-                        await _cacheOrderRepository.RepositoryContext.StringSetAsync(userOrder.OrderId, storedValue);
-                        // Send a notification to employees
-                        await _cacheOrderRepository.Subscriber.PublishAsync(employeeChannel, storedValue);
-                    }
-                    catch
-                    {
-                        Console.WriteLine("An error accured when creating user order!");
-                    }
-                }
+                await _cacheOrderRepository.Subscriber.PublishAsync(employeeChannel, storedValue);
             }
             else
             {

@@ -9,29 +9,36 @@
             _basketRepository=basketRepository;
         }
 
-        public async Task DeleteBasket(string roomName)
+        public async Task<RoomBasket> GetBasket(string basketUserEmail)
         {
-            RedisValue deletedBasket = await _basketRepository.RepositoryContext.StringGetDeleteAsync(roomName);
-            if(deletedBasket.IsNullOrEmpty)
-            {
-                throw new BasketNotFoundException();
-            }
-        }
-
-        public async Task<RoomBasketViewModel> GetBasket(string roomName)
-        {
-            RedisValue basket = await _basketRepository.RepositoryContext.StringGetAsync(roomName);
+            RedisValue basket = await _basketRepository.RepositoryContext.StringGetAsync(basketUserEmail);
             if (basket.IsNullOrEmpty)
             {
                 throw new BasketNotFoundException();
             }
-            return JsonConvert.DeserializeObject<RoomBasketViewModel>(basket.ToString());
+            return JsonConvert.DeserializeObject<RoomBasket>(basket.ToString());
         }
 
-        public async Task UpdateBasket(string roomName, RoomBasketViewModel roomBasketViewModel)
+        public async Task UpdateBasket(string roomName, string confirmedBasketUserEmail, string confirmedBasketUserName, UpdateBasketViewModel basketUsers)
         {
-            string storedValue = JsonConvert.SerializeObject(roomBasketViewModel);
-            await _basketRepository.RepositoryContext.StringSetAsync(roomName, storedValue);
+            RoomBasket updatedBasket = new RoomBasket
+            {
+                RoomName = roomName,
+                ConfirmedBasketUserEmail = confirmedBasketUserEmail,
+                ConfirmedBasketUserName = confirmedBasketUserName,
+                Users = basketUsers.Users,
+            };
+            var storedValueBasket = JsonConvert.SerializeObject(updatedBasket);
+            await _basketRepository.RepositoryContext.StringSetAsync(confirmedBasketUserEmail, storedValueBasket);
+        }
+
+        public async Task DeleteBasket(string basketUserEmail)
+        {
+            RedisValue deletedBasket = await _basketRepository.RepositoryContext.StringGetDeleteAsync(basketUserEmail);
+            if (deletedBasket.IsNullOrEmpty)
+            {
+                throw new BasketNotFoundException();
+            }
         }
     }
 }
