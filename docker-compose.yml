@@ -55,6 +55,17 @@ services:
     volumes:
         - orderservicedatabase:/var/lib/postgresql/data
 
+  walletservice-postgres-server:
+    container_name: WalletServicePostgresServer
+    image: postgres:14-bullseye
+    ports:
+        - "5433:5432"
+    environment:
+         POSTGRES_USER: postgres
+         POSTGRES_PASSWORD: postgres
+    volumes:
+        - walletservicedatabase:/var/lib/postgresql/data
+
   orderservice-redis-server:
     container_name: OrderServiceRedisServer
     image: redis:7-bullseye
@@ -72,9 +83,12 @@ services:
     ports:
         - "4002:80"
 
+
 volumes:
   orderservicedatabase:
   orderservicecache:
     driver: local
   basketservicecache:
     driver: local
+  walletservicedatabase:
+    

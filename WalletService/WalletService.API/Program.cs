@@ -1,3 +1,10 @@
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using EventBus.RabbitMQ;
+using EventBus.RabbitMQ.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using RabbitMQ.Client;
+
 var builder = WebApplication.CreateBuilder(args);
 //start up a 6 versiyonunda gerek yok o yüzden program.cs dosyasýnda direkt iþlem yapýyoruz 
 // Geliþtirme Ortamý Deðiþkenlerini Yükleme
@@ -33,6 +40,14 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
+// Add PostgreSQL
+string postgreSQLConnectionString = builder.Configuration.GetConnectionString("PostgreSQL");
+builder.Services.AddDbContext<DatabaseContext>(options =>
+{
+    options.UseNpgsql(postgreSQLConnectionString);
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -56,3 +71,62 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+SetupRabbitMQ(builder);
+
+void SetupRabbitMQ(WebApplicationBuilder _builder)
+{
+    _builder.Services.AddSingleton<IRabbitMQPersistentConnection>(options =>
+    {
+        string EventBusConnection = EventBusConfigurations.EventBusConnection;
+        string EventBusUserName = EventBusConfigurations.EventBusUserName;
+        string EventBusPassword = EventBusConfigurations.EventBusPassword;
+        int EventBusRetryCount = EventBusConfigurations.EventBusRetryCount;
+
+        var factory = new ConnectionFactory()
+        {
+            HostName = EventBusConnection,
+            DispatchConsumersAsync = true
+        };
+
+        if (!string.IsNullOrEmpty(EventBusUserName))
+        {
+            factory.UserName = EventBusUserName;
+        }
+
+        if (!string.IsNullOrEmpty(EventBusPassword))
+        {
+            factory.Password = EventBusPassword;
+        }
+
+        return new RabbitMQPersistentConnection(factory, EventBusRetryCount);
+    });
+
+    _builder.Services.AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
+
+    _builder.Services.AddSingleton<IEventBus, EventBusRabbitMQ>(sp =>
+    {
+        var subscriptionClientName = _builder.Configuration.GetConnectionString("SubscriptionClientName");
+        var rabbitMQPersistentConnection = sp.GetRequiredService<IRabbitMQPersistentConnection>();
+        var iLifetimeScope = sp.GetRequiredService<ILifetimeScope>();
+        var eventBusSubcriptionsManager = sp.GetRequiredService<IEventBusSubscriptionsManager>();
+
+        return new EventBusRabbitMQ(
+            rabbitMQPersistentConnection,
+            eventBusSubcriptionsManager,
+            iLifetimeScope,
+            subscriptionClientName,
+            EventBusConfigurations.EventBusRetryCount
+        );
+    });
+
+    /* EventBus'tan gelen event sonucunu eventhandler'dan alabilmek için servisi autofac'e ekleme iþlemi
+    _builder.Host
+    .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+    .ConfigureContainer<ContainerBuilder>(builder =>
+    {
+        builder
+        .RegisterAssemblyTypes(typeof(BasketConfirmedIntegrationEventHandling).Assembly)
+        .AsClosedTypesOf(typeof(IIntegrationEventHandler<>));
+    }); */
+}
