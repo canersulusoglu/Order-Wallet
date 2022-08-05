@@ -1,4 +1,6 @@
-﻿namespace OrderService.API.IntegrationEvents.Events
+﻿using EventBus.RabbitMQ.Events;
+
+namespace WalletService.API.IntegrationEvents.Events
 {
     public record BasketConfirmedIntegrationEvent : IntegrationEvent
     {

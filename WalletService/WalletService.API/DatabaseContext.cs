@@ -19,16 +19,19 @@ namespace WalletService.API
                 entity.HasMany(x => x.Products).WithOne(x => x.UserOrder);
                 entity.Property(x => x.UserEmail).IsRequired();
                 entity.Property(x => x.UserName).IsRequired();
+                entity.Property(x => x.DebtAmount).IsRequired();
+                entity.Property(x => x.PaymentAmount).IsRequired();
             });
 
             modelBuilder.Entity<UserWalletItem>(entity =>
             {
                 entity.HasKey(x => x.Id);
-                entity.Property(x => x.Id).UseIdentityColumn();
+                entity.Property(x => x.ProductId).UseIdentityColumn();
                 entity.HasOne(x => x.UserOrder).WithMany(x => x.Products);
                 entity.Property(x => x.ProductQuantity).IsRequired();
                 entity.Property(x => x.ProductId).IsRequired();
-                entity.Property(x => x.ProductPrice).IsRequired();
+                entity.Property(x => x.ProductName).IsRequired();
+                entity.Property(x => x.ProductId).IsRequired();
             });
 
             OnModelCreatingPartial(modelBuilder);

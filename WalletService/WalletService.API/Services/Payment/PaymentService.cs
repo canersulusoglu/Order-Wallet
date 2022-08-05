@@ -10,6 +10,19 @@ namespace WalletService.API.Services.Payment
 
         private readonly IUserWalletRepository _walletRepository;
         private readonly IUserWalletItemRepository _walletItemRepository;
+        private IUserWalletItemRepository userWalletItemRepository;
+
+        public PaymentService(IUserWalletRepository walletRepository, IUserWalletItemRepository walletItemRepository)
+        {
+            _walletRepository = walletRepository;
+            _walletItemRepository = walletItemRepository;
+        }
+
+        public PaymentService(IUserWalletItemRepository userWalletItemRepository)
+        {
+            this.userWalletItemRepository = userWalletItemRepository;
+        }
+
         public void getPaidOrderIdsOfUsersEmployee()
         {
             throw new NotImplementedException();
@@ -46,7 +59,7 @@ namespace WalletService.API.Services.Payment
         {
             int offset = (pageNumber == 1) ? 0 : (pageNumber - 1) * itemsPerPage;
             List<UserWallet> orders = _walletRepository.RepositoryContext.Include(x => x.UserEmail)
-                                                                         .ThenInclude(x => x.DebtAmountst)
+                                                                         .ThenInclude(x => x.DebtAmount)
                                                                          .Where(x => x.Users.Any(a => a.UserEmail == userEmail))
                                                                          .Skip(offset)
                                                                          .Take(itemsPerPage)

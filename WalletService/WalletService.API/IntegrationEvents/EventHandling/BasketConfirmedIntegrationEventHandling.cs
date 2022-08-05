@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-
+/*
 namespace OrderService.API.IntegrationEvents.EventHandling
 {
     public class BasketConfirmedIntegrationEventHandling : IIntegrationEventHandler<BasketConfirmedIntegrationEvent>
@@ -46,3 +46,4 @@ namespace OrderService.API.IntegrationEvents.EventHandling
         }
     }
 }
+*/

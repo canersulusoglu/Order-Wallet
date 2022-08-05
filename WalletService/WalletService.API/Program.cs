@@ -1,4 +1,8 @@
 
+using OrderService.API.Repositories;
+using OrderService.API.Repositories.Interfaces;
+using WalletService.API.Services.Payment;
+
 var builder = WebApplication.CreateBuilder(args);
 
 //start up a 6 versiyonunda gerek yok o yüzden program.cs dosyasýnda direkt iþlem yapýyoruz 
@@ -35,6 +39,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add RabbitMQ
+SetupRabbitMQ(builder);
 
 // Add PostgreSQL
 string postgreSQLConnectionString = builder.Configuration.GetConnectionString("PostgreSQL");
@@ -42,6 +48,22 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 {
     options.UseNpgsql(postgreSQLConnectionString);
 });
+
+// Add Repositories
+builder.Services.AddScoped<IUserWalletRepository, UserWalletRepository>();
+builder.Services.AddScoped<IUserWalletItemRepository, UserWalletItemRepository>();
+
+// Add Services
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddTransient<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IPaymentService>(service =>
+    new PaymentService(
+        service.GetRequiredService<IUserWalletRepository>(),
+        service.GetRequiredService<IUserWalletItemRepository>()
+    )
+);
+
+
 
 var app = builder.Build();
 
@@ -67,8 +89,7 @@ app.MapControllers();
 
 app.Run();
 
-// Add RabbitMQ
-SetupRabbitMQ(builder);
+
 
 void SetupRabbitMQ(WebApplicationBuilder _builder)
 {
@@ -116,20 +137,26 @@ void SetupRabbitMQ(WebApplicationBuilder _builder)
         );
     });
 
-    /*EventBus'tan gelen event sonucunu eventhandler'dan alabilmek için servisi autofac'e ekleme iþlemi
-    _builder.Host
-    .UseServiceProviderFactory(new AutofacServiceProviderFactory())
-    .ConfigureContainer<ContainerBuilder>(builder =>
-    {
-        builder
-        .RegisterAssemblyTypes(typeof(BasketConfirmedIntegrationEventHandling).Assembly)
-        .AsClosedTypesOf(typeof(IIntegrationEventHandler<>));
-    });
 
-    void ConfigureEventBus(IApplicationBuilder app){
+    
+}
+
+/*EventBus'tan gelen event sonucunu eventhandler'dan alabilmek için servisi autofac'e ekleme iþlemi
+_builder.Host
+.UseServiceProviderFactory(new AutofacServiceProviderFactory())
+.ConfigureContainer<ContainerBuilder>(builder =>
+{
+    builder
+    .RegisterAssemblyTypes(typeof(BasketConfirmedIntegrationEventHandling).Assembly)
+    .AsClosedTypesOf(typeof(IIntegrationEventHandler<>));
+});
+
+void ConfigureEventBus(IApplicationBuilder app)
+{
     var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
 
     // Basket.API'den verinin gelmesini dinlemek için kanala katýlma iþlemi
     eventBus.Subscribe<BasketConfirmedIntegrationEvent, BasketConfirmedIntegrationEventHandling>();
-    }*/
 }
+*/
+
