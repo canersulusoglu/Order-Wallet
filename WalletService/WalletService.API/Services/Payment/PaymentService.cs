@@ -10,7 +10,6 @@ namespace WalletService.API.Services.Payment
 
         private readonly IUserWalletRepository _walletRepository;
         private readonly IUserWalletItemRepository _walletItemRepository;
-        private IUserWalletItemRepository userWalletItemRepository;
 
         public PaymentService(IUserWalletRepository walletRepository, IUserWalletItemRepository walletItemRepository)
         {
