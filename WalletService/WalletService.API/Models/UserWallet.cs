@@ -12,6 +12,8 @@
 
         public double PaymentAmount { get; set; }
 
+        public string DebtAmountst { get; set; }
+
         public ICollection<UserWalletItem> Products { get; set; }
     }
 }

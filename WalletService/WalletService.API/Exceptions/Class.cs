@@ -1,7 +1,6 @@
 ﻿namespace WalletService.API.Exceptions
 {
-    public class OrderNotFoundException : Exception
+    public class Class
     {
-
     }
 }

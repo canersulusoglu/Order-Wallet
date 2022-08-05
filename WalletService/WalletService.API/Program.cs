@@ -1,11 +1,6 @@
-using Autofac;
-using Autofac.Extensions.DependencyInjection;
-using EventBus.RabbitMQ;
-using EventBus.RabbitMQ.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
+
 //start up a 6 versiyonunda gerek yok o yüzden program.cs dosyasýnda direkt iþlem yapýyoruz 
 // Geliþtirme Ortamý Deðiþkenlerini Yükleme
 string envName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
@@ -72,6 +67,7 @@ app.MapControllers();
 
 app.Run();
 
+// Add RabbitMQ
 SetupRabbitMQ(builder);
 
 void SetupRabbitMQ(WebApplicationBuilder _builder)
@@ -120,7 +116,7 @@ void SetupRabbitMQ(WebApplicationBuilder _builder)
         );
     });
 
-    /* EventBus'tan gelen event sonucunu eventhandler'dan alabilmek için servisi autofac'e ekleme iþlemi
+    /*EventBus'tan gelen event sonucunu eventhandler'dan alabilmek için servisi autofac'e ekleme iþlemi
     _builder.Host
     .UseServiceProviderFactory(new AutofacServiceProviderFactory())
     .ConfigureContainer<ContainerBuilder>(builder =>
@@ -128,5 +124,12 @@ void SetupRabbitMQ(WebApplicationBuilder _builder)
         builder
         .RegisterAssemblyTypes(typeof(BasketConfirmedIntegrationEventHandling).Assembly)
         .AsClosedTypesOf(typeof(IIntegrationEventHandler<>));
-    }); */
+    });
+
+    void ConfigureEventBus(IApplicationBuilder app){
+    var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
+
+    // Basket.API'den verinin gelmesini dinlemek için kanala katýlma iþlemi
+    eventBus.Subscribe<BasketConfirmedIntegrationEvent, BasketConfirmedIntegrationEventHandling>();
+    }*/
 }
