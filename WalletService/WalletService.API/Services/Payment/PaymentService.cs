@@ -17,10 +17,10 @@ namespace WalletService.API.Services.Payment
             _walletItemRepository = walletItemRepository;
         }
 
-        public PaymentService(IUserWalletItemRepository userWalletItemRepository)
+        /*public PaymentService(IUserWalletItemRepository userWalletItemRepository)
         {
             this.userWalletItemRepository = userWalletItemRepository;
-        }
+        }*/
 
         public void getPaidOrderIdsOfUsersEmployee()
         {
@@ -54,7 +54,7 @@ namespace WalletService.API.Services.Payment
 
         }
         //string DebtAmountst = UserWallet.DebtAmount.ToString();
-        public List<UserWallet> getUnpaidOrderIdsOfUsersEmployee(string userEmail, int itemsPerPage, int pageNumber)
+        /*public List<UserWallet> getUnpaidOrderIdsOfUsersEmployee(string userEmail, int itemsPerPage, int pageNumber)
         {
             int offset = (pageNumber == 1) ? 0 : (pageNumber - 1) * itemsPerPage;
             List<UserWallet> orders = _walletRepository.RepositoryContext.Include(x => x.UserEmail)
@@ -71,6 +71,6 @@ namespace WalletService.API.Services.Payment
             int offset = (pageNumber == 1) ? 0 : (pageNumber - 1) * itemsPerPage;
             List<RoomOrder> orders =  _orderRepository.RepositoryContext.Include(x => x.Users).ThenInclude(x => x.Products).Skip(offset).Take(itemsPerPage).OrderByDescending(x => x.CreatedTime).ToList();
             return orders;
-        }
+        }*/
     }
 }
