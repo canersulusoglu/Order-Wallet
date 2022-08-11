@@ -1,4 +1,4 @@
-﻿namespace BasketService.API.Services.Identity
+﻿namespace WalletService.API.Services.Identity
 {
     public class IdentityService : IIdentityService
     {

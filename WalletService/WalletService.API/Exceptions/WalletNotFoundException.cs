@@ -1,6 +1,6 @@
 ﻿namespace WalletService.API.Exceptions
 {
-    public class Class
+    public class WalletNotFoundException : Exception
     {
     }
 }

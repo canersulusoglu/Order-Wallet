@@ -12,13 +12,13 @@
         public string GetUserIdentity()
         {
             //return _context.HttpContext.User.FindFirst("sub").Value;
-            return "eren_sarac@gmail.com";
+            return "admin";
         }
 
         public string GetUserName()
         {
             //return _context.HttpContext.User.Identity.Name;
-            return "Eren Saraç";
+            return "admin";
         }
 
         public string GetUserRoomName()

@@ -1,8 +1,4 @@
 
-using OrderService.API.Repositories;
-using OrderService.API.Repositories.Interfaces;
-using WalletService.API.Services.Payment;
-
 var builder = WebApplication.CreateBuilder(args);
 
 //start up a 6 versiyonunda gerek yok o yüzden program.cs dosyasýnda direkt iþlem yapýyoruz 
@@ -156,7 +152,7 @@ void ConfigureEventBus(IApplicationBuilder app)
     var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
 
     // Basket.API'den verinin gelmesini dinlemek için kanala katýlma iþlemi
-    eventBus.Subscribe<BasketConfirmedIntegrationEvent, BasketConfirmedIntegrationEventHandling>();
-}
-*/
+    eventBus.Subscribe<BasketConfirmedIntegrationEvent, BasketConfirmedIntegrationEventHandling>();*/
+
+
 

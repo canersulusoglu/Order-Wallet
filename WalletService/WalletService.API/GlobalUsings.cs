@@ -15,3 +15,7 @@ global using EventBus.RabbitMQ;
 global using EventBus.RabbitMQ.Interfaces;
 global using Microsoft.EntityFrameworkCore;
 global using RabbitMQ.Client;
+global using OrderService.API.Repositories;
+global using OrderService.API.Repositories.Interfaces;
+global using WalletService.API.Services.Payment;
+global using WalletService.API.Services.Identity;
